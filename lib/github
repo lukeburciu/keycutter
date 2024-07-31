@@ -36,27 +36,45 @@ github-ssh-key-add() {
 
 github-auth() {
 
-    # Ensure user is logged in to GitHub with required scopes
-
-    # Show GitHub login status
-    gh auth status 2>&1 | grep 'Logged in to github.com as' >&2
-    # Give user a chance to login or re-login as a different user
+  # Check if user is logged in to GitHub
+  gh auth status > /dev/null 2>&1
+  if [[ $? -eq 0 ]]; then
+    log >&2 "GitHub CLI: User $(gh auth status | grep 'account ' | awk '{print $7}') is logged in."
+    github-check-scopes
+  elif [[ $? -eq 1 ]]; then
+    log >&2 "GitHub CLI: User is not logged in." 
     gh auth login \
       --web \
       --git-protocol https \
       --scopes admin:public_key,admin:ssh_signing_key
-
-    local gh_auth_token_scopes
-    # If user is authenticated to GitHub
-    if gh_auth_token_scopes=$(gh auth status | grep scopes); then 
-      if [[ $gh_auth_token_scopes =~ 'admin:public_key' ]] && [[ $gh_auth_token_scopes =~ 'admin:ssh_signing_key' ]] ; then
-        log >&2 "GitHub CLI: Required scopes are available."
-      else
-        log >&2 "GitHub CLI: Necessary scopes are not available. Requesting additional scopes..."
-        gh auth refresh -h github.com -s admin:public_key,admin:ssh_signing_key
-      fi
-    fi
+  else
+    log >&2 "GitHub CLI: Error: gh auth status returned $?"
+    return 1
+  fi
 }
+
+github-check-scopes() {
+  # check scopes
+  if github-auth-required-scopes; then
+    log >&2 "GitHub CLI: Required scopes are available."
+    log >&2 "GitHub CLI: Scopes: $(gh auth status | grep 'scopes' | cut -d':' -f2-)"
+  else
+    log >&2 "GitHub CLI: Necessary scopes are not available. Requesting additional scopes..."
+    gh auth refresh -h github.com -s admin:public_key,admin:ssh_signing_key
+  fi
+
+}
+
+github-auth-required-scopes() {
+  local github_auth_scopes
+  github_auth_scopes=$(gh auth status | grep scopes)
+  if [[ $github_auth_scopes =~ 'admin:public_key' ]] && [[ $github_auth_scopes =~ 'admin:ssh_signing_key' ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 
 github-ssh-keys() {
   github-auth
