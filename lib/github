@@ -7,11 +7,11 @@ github-ssh-key-add() {
     local ssh_key_path="$1"
     local ssh_keytag="$2"
 
-    if [[ -z "$ssh_keytag" || -z "$ssh_key_path" ]]; then 
+    if [[ -z "$ssh_keytag" || -z "$ssh_key_path" ]]; then
         log "Error: ssh_keytag and ssh_key_path are required."
         return 1
     fi
-    
+
     prompt "Upload public key to GitHub for auth and commit signing using Github CLI? (Y/n) "
     read -p choice
     choice=${choice:-Y}
