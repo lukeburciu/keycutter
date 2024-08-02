@@ -257,6 +257,10 @@ keycutter-update-ssh-config() {
     log "Keycutter installation/update complete."
 }
 
+keycutter-fido-credentials() {
+    yubikey-fido-credentials-list
+}
+
 keycutter-generate-completion() {
     local completion_file="${KEYCUTTER_ROOT}/bin/keycutter-completion.bash"
     local commands=$(declare -F | cut -d' ' -f3 | grep '^keycutter-' | sed 's/^keycutter-//' | tr '\n' ' ')

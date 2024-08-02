@@ -2,4 +2,9 @@
 
 # Might not keep this here, but for now it's here
 
-ykman
+
+yubikey-fido-credentials-list() {
+  ykman fido credentials list
+}
+
+# ykman
